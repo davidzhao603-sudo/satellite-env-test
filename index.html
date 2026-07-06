@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>卫星环境试验介绍</title>
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --bg-card: #FFFFFF;
+    --ink: #1A1A1A;
+    --ink-soft: #444444;
+    --ink-mute: #888888;
+    --line: #E5E2D7;
+    --line-strong: #CFC9B8;
+    --navy: #003B5C;
+    --navy-soft: #7BA8C4;
+    --navy-tint: #B8CDD9;
+    --bronze: #7D5A2F;
+    --bronze-soft: #B89A6E;
+    --emerald: #0E4D3C;
+    --mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "Inter", "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+    --serif: "Source Serif 4", "Source Serif Pro", Georgia, serif;
+    --shadow-soft: 0 1px 2px rgba(26,26,26,0.04), 0 4px 16px rgba(26,26,26,0.06);
+    --shadow-lift: 0 8px 24px rgba(0,59,92,0.12), 0 2px 8px rgba(0,59,92,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  body { min-height: 100vh; }
+  a { color: var(--navy); text-decoration: none; transition: color 0.2s ease; }
+  a:hover { color: var(--bronze); }
+  ::selection { background: rgba(0,59,92,0.15); color: var(--ink); }
+
+  /* ===== Page Switching ===== */
+  .page { display: none; animation: fadeIn 0.4s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== Themed Visual (SVG-based, no external requests) ===== */
+  .visual {
+    position: relative; overflow: hidden;
+    background-size: cover; background-position: center;
+    transition: transform 0.6s cubic-bezier(0.2,0.8,0.2,1);
+  }
+  .visual::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 55%, rgba(0,40,70,0.5) 100%);
+    pointer-events: none;
+  }
+
+  /* Mechanical: navy + sine wave */
+  .vis-mech { background: linear-gradient(135deg, #002b46, #003B5C 60%, #0a4d72); }
+  .vis-mech .vis-icon { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'><path d='M0 60 Q 25 20 50 60 T 100 60 T 150 60 T 200 60' fill='none' stroke='%237BA8C4' stroke-width='2.5' opacity='0.7'/><path d='M0 70 Q 25 30 50 70 T 100 70 T 150 70 T 200 70' fill='none' stroke='%237BA8C4' stroke-width='1.5' opacity='0.4'/></svg>"); background-repeat: repeat; }
+
+  /* Thermal: amber/ember + heat bars */
+  .vis-thermal { background: linear-gradient(135deg, #7a2e0a, #b8460f 50%, #d97636); }
+  .vis-thermal .vis-icon { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'><rect x='20' y='60' width='8' height='40' fill='%23ffd479' opacity='0.5' rx='2'/><rect x='40' y='40' width='8' height='60' fill='%23ffd479' opacity='0.7' rx='2'/><rect x='60' y='20' width='8' height='80' fill='%23ffe9b0' opacity='0.8' rx='2'/><rect x='80' y='35' width='8' height='65' fill='%23ffd479' opacity='0.7' rx='2'/><rect x='100' y='50' width='8' height='50' fill='%23ffd479' opacity='0.5' rx='2'/><rect x='120' y='60' width='8' height='40' fill='%23ffd479' opacity='0.4' rx='2'/></svg>"); background-repeat: repeat; }
+
+  /* EMC: indigo + radiation waves */
+  .vis-emc { background: linear-gradient(135deg, #2a1a4a, #3d2570 50%, #5a3590); }
+  .vis-emc .vis-icon { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'><circle cx='30' cy='60' r='6' fill='%23b39ddb' opacity='0.6'/><circle cx='30' cy='60' r='18' fill='none' stroke='%23b39ddb' stroke-width='1.5' opacity='0.5'/><circle cx='30' cy='60' r='32' fill='none' stroke='%23b39ddb' stroke-width='1.5' opacity='0.35'/><circle cx='30' cy='60' r='48' fill='none' stroke='%23b39ddb' stroke-width='1.5' opacity='0.2'/><circle cx='110' cy='60' r='6' fill='%23ce93d8' opacity='0.6'/><circle cx='110' cy='60' r='18' fill='none' stroke='%23ce93d8' stroke-width='1.5' opacity='0.5'/><circle cx='110' cy='60' r='32' fill='none' stroke='%23ce93d8' stroke-width='1.5' opacity='0.35'/></svg>"); background-repeat: repeat; }
+
+  /* Magnetic: teal + field lines */
+  .vis-mag { background: linear-gradient(135deg, #0a3a32, #0E4D3C 50%, #1a6b54); }
+  .vis-mag .vis-icon { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'><ellipse cx='80' cy='60' rx='50' ry='22' fill='none' stroke='%2380cbc4' stroke-width='1.5' opacity='0.5'/><ellipse cx='80' cy='60' rx='38' ry='16' fill='none' stroke='%2380cbc4' stroke-width='1.5' opacity='0.6'/><ellipse cx='80' cy='60' rx='26' ry='10' fill='none' stroke='%2380cbc4' stroke-width='1.5' opacity='0.7'/><circle cx='80' cy='60' r='4' fill='%23b2dfdb' opacity='0.9'/><path d='M30 60 L 130 60' stroke='%2380cbc4' stroke-width='1' opacity='0.3' stroke-dasharray='4 4'/></svg>"); background-repeat: repeat; }
+
+  .vis-icon { position: absolute; inset: 0; background-size: auto; opacity: 0.85; mix-blend-mode: screen; }
+  .visual:hover { transform: scale(1.06); }
+
+  /* ===== Header ===== */
+  .site-header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .site-header__inner {
+    max-width: 1280px; margin: 0 auto; padding: 0 40px;
+    height: 64px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+  .brand__mark {
+    width: 22px; height: 22px; border: 2px solid var(--navy); transform: rotate(45deg);
+    transition: transform 0.4s cubic-bezier(0.2,0.8,0.2,1);
+  }
+  .brand:hover .brand__mark { transform: rotate(135deg); background: var(--navy); }
+  .brand__name { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: 0.02em; }
+  .site-nav { display: flex; gap: 28px; }
+  .site-nav a {
+    font-size: 14px; color: var(--ink-soft); position: relative; padding: 4px 0;
+    transition: color 0.2s ease; cursor: pointer;
+  }
+  .site-nav a::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1.5px;
+    background: var(--navy); transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1);
+  }
+  .site-nav a:hover { color: var(--navy); }
+  .site-nav a:hover::after { transform: scaleX(1); }
+
+  /* ===== Hero (home) ===== */
+  .hero { position: relative; overflow: hidden; color: #fff; }
+  .hero__visual { position: absolute; inset: 0; opacity: 0.5; }
+  .hero__visual .vis-icon { opacity: 0.6; }
+  .hero__inner { position: relative; max-width: 1280px; margin: 0 auto; padding: 96px 40px; }
+  .hero__kicker { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 0.18em; color: var(--navy-soft); margin-bottom: 20px; }
+  .hero__title { font-family: var(--serif); font-size: clamp(36px, 5vw, 60px); font-weight: 700; line-height: 1.15; letter-spacing: -0.01em; margin-bottom: 24px; max-width: 880px; }
+  .hero__title em { font-style: normal; color: #ffd479; }
+  .hero__desc { font-size: 17px; color: var(--navy-tint); max-width: 720px; line-height: 1.7; }
+  .hero__meta { display: flex; gap: 32px; margin-top: 40px; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.12); flex-wrap: wrap; }
+  .hero__stat { display: flex; flex-direction: column; gap: 4px; }
+  .hero__stat-num { font-family: var(--mono); font-size: 28px; font-weight: 700; color: #fff; }
+  .hero__stat-label { font-size: 12px; color: var(--navy-soft); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* ===== Section ===== */
+  .section { max-width: 1280px; margin: 0 auto; padding: 80px 40px; scroll-margin-top: 80px; }
+  .section__head { margin-bottom: 48px; }
+  .section__kicker { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--navy); letter-spacing: 0.18em; margin-bottom: 12px; }
+  .section__title { font-family: var(--serif); font-size: 36px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; margin-bottom: 16px; }
+  .section__desc { font-size: 17px; color: var(--ink-soft); max-width: 720px; line-height: 1.7; }
+
+  /* ===== Card Grid ===== */
+  .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .card {
+    position: relative; background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: 2px; overflow: hidden; cursor: pointer;
+    transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s ease, border-color 0.3s ease;
+  }
+  .card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); border-color: var(--navy); }
+  .card__img { height: 180px; position: relative; overflow: hidden; }
+  .card__body { padding: 28px 32px 32px; display: flex; flex-direction: column; gap: 12px; }
+  .card__num { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--navy); }
+  .card__title { font-family: var(--serif); font-size: 22px; font-weight: 700; color: var(--ink); transition: color 0.25s ease; }
+  .card:hover .card__title { color: var(--navy); }
+  .card__desc { font-size: 14px; color: var(--ink-soft); line-height: 1.65; }
+  .card__list { font-size: 13px; color: var(--ink-soft); line-height: 1.95; padding-left: 4px; }
+  .card__cta { margin-top: 8px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--navy); letter-spacing: 0.02em; }
+  .card__cta::after { content: "→"; transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1); }
+  .card:hover .card__cta::after { transform: translateX(6px); }
+  .card:hover .card__cta { color: var(--bronze); }
+
+  /* Standards cards (non-clickable) */
+  .card--static { cursor: default; }
+  .card--static:hover { transform: translateY(-4px); }
+
+  /* ===== Footer ===== */
+  .site-footer { background: #1A1A1A; color: #fff; padding: 56px 40px 32px; scroll-margin-top: 80px; }
+  .site-footer__inner { max-width: 1280px; margin: 0 auto; }
+  .site-footer__row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 48px; margin-bottom: 40px; }
+  .site-footer__brand { max-width: 360px; }
+  .site-footer__brand .brand__name { color: #fff; }
+  .site-footer__tag { font-size: 13px; color: #888; line-height: 1.7; margin-top: 12px; }
+  .footer-cols { display: flex; gap: 64px; flex-wrap: wrap; }
+  .footer-col h4 { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; color: #fff; margin-bottom: 14px; text-transform: uppercase; }
+  .footer-col a { display: block; font-size: 13px; color: #999; margin-bottom: 8px; transition: color 0.2s ease, transform 0.2s ease; cursor: pointer; }
+  .footer-col a:hover { color: #fff; transform: translateX(4px); }
+  .site-footer__bottom { border-top: 1px solid #333; padding-top: 24px; font-size: 12px; color: #666; }
+
+  /* ===== Detail Page ===== */
+  .detail-header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: saturate(180%) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .detail-header__inner { max-width: 1280px; margin: 0 auto; padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 10px 18px; background: var(--navy); color: #fff;
+    border-radius: 4px; font-size: 13px; font-weight: 600;
+    transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1), background 0.25s ease, box-shadow 0.3s ease;
+    cursor: pointer; border: none;
+  }
+  .back-btn:hover { background: #002b46; transform: translateX(-4px); box-shadow: var(--shadow-lift); }
+  .back-btn:hover .back-btn__arrow { transform: translateX(-3px); }
+  .back-btn__arrow { display: inline-block; transition: transform 0.3s ease; }
+  .detail-header__meta { font-family: var(--mono); font-size: 12px; color: var(--ink-mute); letter-spacing: 0.12em; }
+
+  .detail-hero { position: relative; overflow: hidden; color: #fff; }
+  .detail-hero__visual { position: absolute; inset: 0; opacity: 0.45; }
+  .detail-hero__visual .vis-icon { opacity: 0.55; }
+  .detail-hero__inner { position: relative; max-width: 1280px; margin: 0 auto; padding: 72px 40px; }
+  .detail-hero__kicker { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--navy-soft); letter-spacing: 0.18em; margin-bottom: 16px; }
+  .detail-hero__title { font-family: var(--serif); font-size: clamp(36px, 5vw, 52px); font-weight: 700; line-height: 1.15; margin-bottom: 20px; }
+  .detail-hero__desc { font-size: 16px; color: var(--navy-tint); max-width: 880px; line-height: 1.7; }
+
+  /* Sub-test block */
+  .sub-list { max-width: 1280px; margin: 0 auto; padding: 48px 40px 80px; }
+  .sub-block {
+    display: grid; grid-template-columns: 280px 1fr; gap: 48px;
+    padding: 36px 0; border-top: 1px solid var(--line);
+    transition: background 0.3s ease, padding-left 0.4s cubic-bezier(0.2,0.8,0.2,1);
+  }
+  .sub-block:hover { background: linear-gradient(90deg, rgba(0,59,92,0.04) 0%, transparent 60%); padding-left: 16px; }
+  .sub-block__left { display: flex; flex-direction: column; gap: 8px; }
+  .sub-block__num { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--navy); }
+  .sub-block__title { font-family: var(--serif); font-size: 22px; font-weight: 700; color: var(--ink); transition: color 0.25s ease; }
+  .sub-block:hover .sub-block__title { color: var(--navy); }
+  .sub-block__tag { font-size: 12px; color: var(--ink-mute); }
+  .sub-block__thumb { margin-top: 8px; height: 120px; border-radius: 2px; border: 1px solid var(--line); transition: transform 0.5s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.4s ease; }
+  .sub-block:hover .sub-block__thumb { transform: scale(1.04); box-shadow: var(--shadow-soft); }
+  .sub-block__right { display: flex; flex-direction: column; gap: 16px; }
+  .sub-block__field { display: flex; flex-direction: column; gap: 6px; }
+  .sub-block__label { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+  .sub-block__label--principle { color: var(--navy); }
+  .sub-block__label--effect { color: var(--bronze); }
+  .sub-block__text { font-size: 15px; color: var(--ink-soft); line-height: 1.75; }
+  .sub-block__text strong { color: var(--ink); font-weight: 600; }
+
+  @media (max-width: 900px) {
+    .card-grid { grid-template-columns: 1fr; }
+    .sub-block { grid-template-columns: 1fr; gap: 24px; }
+    .section, .detail-hero__inner, .sub-list, .site-header__inner, .detail-header__inner, .site-footer__inner { padding-left: 24px; padding-right: 24px; }
+    .hero__inner { padding: 64px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =================== HOME =================== -->
+<div class="page active" id="page-home">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand" onclick="navigate('home')">
+        <span class="brand__mark"></span>
+        <span class="brand__name">卫星环境试验</span>
+      </div>
+      <nav class="site-nav">
+        <a onclick="goToSection('types')">试验类型</a>
+        <a onclick="goToSection('standards')">标准依据</a>
+        <a onclick="goToSection('about')">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero__visual visual vis-mech"><div class="vis-icon"></div></div>
+    <div class="hero__inner">
+      <div class="hero__kicker">SATELLITE ENVIRONMENTAL TESTING</div>
+      <h1 class="hero__title">让航天器经受住<br>太空的<em>终极考验</em></h1>
+      <p class="hero__desc">卫星在发射与在轨运行期间面临振动、冲击、极端温度交变与电磁干扰等严酷环境。环境试验通过地面模拟，提前暴露设计隐患，验证产品可靠性。</p>
+      <div class="hero__meta">
+        <div class="hero__stat"><span class="hero__stat-num">4</span><span class="hero__stat-label">试验大类</span></div>
+        <div class="hero__stat"><span class="hero__stat-num">16</span><span class="hero__stat-label">子试验项目</span></div>
+        <div class="hero__stat"><span class="hero__stat-num">GJB 151B/C</span><span class="hero__stat-label">主要标准</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="types">
+    <div class="section__head">
+      <div class="section__kicker">试验类型</div>
+      <h2 class="section__title">四大类环境试验及作用</h2>
+      <p class="section__desc">按照卫星研制流程，环境试验涵盖力学、热、电磁兼容与磁四大领域，贯穿初样到正样阶段，确保航天器在全寿命周期内的可靠性。点击卡片查看详情。</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card" onclick="navigate('mechanical')">
+        <div class="card__img visual vis-mech"><div class="vis-icon"></div></div>
+        <div class="card__body">
+          <span class="card__num">01</span>
+          <h3 class="card__title">力学试验</h3>
+          <p class="card__desc">模拟运载火箭发射与飞行过程中的振动、冲击、声学等力学环境，验证结构强度与电子设备可靠性。</p>
+          <div class="card__list">• 振动试验（正弦扫频 / 随机振动）<br>• 冲击试验（经典脉冲 / SRS）<br>• 模态试验（固有频率与振型辨识）<br>• 声学试验（混响室噪声环境）</div>
+          <span class="card__cta">查看详情</span>
+        </div>
+      </div>
+
+      <div class="card" onclick="navigate('thermal')">
+        <div class="card__img visual vis-thermal"><div class="vis-icon"></div></div>
+        <div class="card__body">
+          <span class="card__num">02</span>
+          <h3 class="card__title">热试验</h3>
+          <p class="card__desc">模拟太空真空与极端温度交变环境，验证热控系统设计与电子器件的温度适应性。</p>
+          <div class="card__list">• 热真空试验（真空 + 高低温循环）<br>• 热循环试验（温度快速交变）<br>• 热平衡试验（验证热控设计）<br>• 热浸试验（高温老炼）</div>
+          <span class="card__cta">查看详情</span>
+        </div>
+      </div>
+
+      <div class="card" onclick="navigate('emc')">
+        <div class="card__img visual vis-emc"><div class="vis-icon"></div></div>
+        <div class="card__body">
+          <span class="card__num">03</span>
+          <h3 class="card__title">电磁兼容试验</h3>
+          <p class="card__desc">确保卫星电子设备互不干扰且能抵抗外部电磁环境，依据 GJB 151B/C 标准实施。</p>
+          <div class="card__list">• RE/CE 辐射与传导发射<br>• RS/CS 辐射与传导敏感度<br>• 依据 GJB 151B / 151C 标准</div>
+          <span class="card__cta">查看详情</span>
+        </div>
+      </div>
+
+      <div class="card" onclick="navigate('magnetic')">
+        <div class="card__img visual vis-mag"><div class="vis-icon"></div></div>
+        <div class="card__body">
+          <span class="card__num">04</span>
+          <h3 class="card__title">磁试验</h3>
+          <p class="card__desc">控制卫星整体磁特性，保障姿态控制精度与科学测量有效性。</p>
+          <div class="card__list">• 剩磁矩测量<br>• 背景磁环境评估<br>• 杂散磁场测量<br>• 磁补偿试验</div>
+          <span class="card__cta">查看详情</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="standards">
+    <div class="section__head">
+      <div class="section__kicker">标准依据</div>
+      <h2 class="section__title">主要试验标准</h2>
+      <p class="section__desc">卫星环境试验依据国军标、欧空局标准及美军标体系实施，确保试验方法与限值要求具备权威性与可追溯性。</p>
+    </div>
+    <div class="card-grid">
+      <div class="card card--static">
+        <div class="card__img visual vis-emc"><div class="vis-icon"></div></div>
+        <div class="card__body">
+          <span class="card__num">国军标</span>
+          <h3 class="card__title">GJB 151B / 151C</h3>
+          <p class="card__desc">军用设备和分系统电磁发射与敏感度要求与测量方法，是卫星 EMC 试验的核心依据。涵盖 RE/CE/RS/CS 各类电磁干扰测试方法与限值。</p>
+        </div>
+      </div>
+      <div class="card card--static">
+        <div class="card__img visual vis-mech"><div class="vis-icon"></div></div>
+        <div class="card__body">
+          <span class="card__num">欧空局</span>
+          <h3 class="card__title">ECSS-E-ST-10-03</h3>
+          <p class="card__desc">欧空局航天工程试验标准，覆盖力学、热真空与综合环境试验全流程，适用于通信卫星及深空探测器型号。</p>
+        </div>
+      </div>
+      <div class="card card--static">
+        <div class="card__img visual vis-thermal"><div class="vis-icon"></div></div>
+        <div class="card__body">
+          <span class="card__num">美军标</span>
+          <h3 class="card__title">MIL-STD-810</h3>
+          <p class="card__desc">环境工程考虑与实验室试验方法标准，涵盖振动、冲击、温度、湿度、盐雾等环境因素，被国际航天型号广泛参考。</p>
+        </div>
+      </div>
+      <div class="card card--static">
+        <div class="card__img visual vis-mag"><div class="vis-icon"></div></div>
+        <div class="card__body">
+          <span class="card__num">NASA</span>
+          <h3 class="card__title">NASA-STD-7001</h3>
+          <p class="card__desc">NASA 航天器有效载荷与系统级试验要求，涵盖力学、声学、热与 EMC 全维度，是 NASA 任务级试验的基线标准。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer" id="about">
+    <div class="site-footer__inner">
+      <div class="site-footer__row">
+        <div class="site-footer__brand">
+          <div class="brand" onclick="navigate('home')">
+            <span class="brand__mark"></span>
+            <span class="brand__name" style="color:#fff;">卫星环境试验介绍</span>
+          </div>
+          <p class="site-footer__tag">面向航天工程的环境试验知识科普页面，系统介绍卫星研制全周期内的力学、热、电磁兼容与磁试验原理及作用，旨在提升对卫星可靠性验证的认识。本页内容为知识科普，不作工程依据。</p>
+        </div>
+        <div class="footer-cols">
+          <div class="footer-col">
+            <h4>试验类型</h4>
+            <a onclick="navigate('mechanical')">力学试验</a>
+            <a onclick="navigate('thermal')">热试验</a>
+            <a onclick="navigate('emc')">电磁兼容试验</a>
+            <a onclick="navigate('magnetic')">磁试验</a>
+          </div>
+          <div class="footer-col">
+            <h4>标准依据</h4>
+            <a onclick="goToSection('standards')">GJB 151B/C</a>
+            <a onclick="goToSection('standards')">ECSS 标准</a>
+            <a onclick="goToSection('standards')">MIL-STD-810</a>
+            <a onclick="goToSection('standards')">NASA-STD-7001</a>
+          </div>
+        </div>
+      </div>
+      <div class="site-footer__bottom">© 2026 卫星环境试验介绍 · 本页内容为知识科普，不作工程依据。</div>
+    </div>
+  </footer>
+</div>
+
+<!-- =================== DETAIL: MECHANICAL =================== -->
+<div class="page" id="page-mechanical">
+  <header class="detail-header">
+    <div class="detail-header__inner">
+      <button class="back-btn" onclick="navigate('home')">
+        <span class="back-btn__arrow">←</span> 返回主页
+      </button>
+      <span class="detail-header__meta">试验详情 / DETAIL</span>
+    </div>
+  </header>
+
+  <section class="detail-hero">
+    <div class="detail-hero__visual visual vis-mech"><div class="vis-icon"></div></div>
+    <div class="detail-hero__inner">
+      <div class="detail-hero__kicker">MECHANICAL TEST · 力学试验</div>
+      <h1 class="detail-hero__title">力学试验</h1>
+      <p class="detail-hero__desc">通过地面模拟运载火箭发射与飞行过程的振动、冲击、声学等力学环境，全面验证卫星结构力学强度、连接可靠性及电子设备的抗振性能，是力学鉴定试验的核心环节。</p>
+    </div>
+  </section>
+
+  <div class="sub-list">
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">01</span>
+        <h3 class="sub-block__title">振动试验</h3>
+        <span class="sub-block__tag">正弦扫频 / 随机振动</span>
+        <div class="sub-block__thumb visual vis-mech"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">通过电动或液压<strong>振动台</strong>对试件施加正弦扫频或宽带随机振动激励，输入条件取自运载火箭实测或预估的力学环境剖面。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">暴露结构<strong>共振与疲劳隐患</strong>，验证电子设备在长期振动下的电气与机械可靠性，是力学鉴定试验的核心项。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">02</span>
+        <h3 class="sub-block__title">冲击试验</h3>
+        <span class="sub-block__tag">经典脉冲 / SRS</span>
+        <div class="sub-block__thumb visual vis-mech"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">通过跌落式或气动冲击台施加<strong>半正弦、后峰锯齿</strong>等瞬态加速度脉冲，模拟火箭级间分离、爆炸螺栓点火等冲击事件。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">验证结构件抗冲击能力，考核<strong>螺栓连接、焊点及脆性器件</strong>的可靠性，确保分离环节后功能完好。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">03</span>
+        <h3 class="sub-block__title">模态试验</h3>
+        <span class="sub-block__tag">锤击法 / 激振器法</span>
+        <div class="sub-block__thumb visual vis-mech"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">采用<strong>力锤法或激振器</strong>对结构施加激励，测量多点频响函数，经模态参数识别提取固有频率、阻尼比与振型。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">校正有限元模型，识别<strong>共振风险</strong>，为振动试验条件设计与星上设备布局提供依据。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">04</span>
+        <h3 class="sub-block__title">声学试验</h3>
+        <span class="sub-block__tag">混响室 / 行波管</span>
+        <div class="sub-block__thumb visual vis-mech"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">在<strong>高声压级混响室</strong>内施加宽带随机噪声，模拟火箭起飞排气及跨声速阶段的声振环境，对大面积轻质结构作用显著。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">考核<strong>太阳翼、天线反射面</strong>等薄壁结构的声振疲劳寿命，验证紧固件防松设计。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== DETAIL: THERMAL =================== -->
+<div class="page" id="page-thermal">
+  <header class="detail-header">
+    <div class="detail-header__inner">
+      <button class="back-btn" onclick="navigate('home')">
+        <span class="back-btn__arrow">←</span> 返回主页
+      </button>
+      <span class="detail-header__meta">试验详情 / DETAIL</span>
+    </div>
+  </header>
+
+  <section class="detail-hero">
+    <div class="detail-hero__visual visual vis-thermal"><div class="vis-icon"></div></div>
+    <div class="detail-hero__inner">
+      <div class="detail-hero__kicker">THERMAL TEST · 热试验</div>
+      <h1 class="detail-hero__title">热试验</h1>
+      <p class="detail-hero__desc">通过真空舱与温度交变环境地面模拟，全面验证卫星热控系统设计与电子器件在轨温度适应性，覆盖初样至正样鉴定阶段。</p>
+    </div>
+  </section>
+
+  <div class="sub-list">
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">01</span>
+        <h3 class="sub-block__title">热真空试验</h3>
+        <span class="sub-block__tag">TVAC · 真空+高低温</span>
+        <div class="sub-block__thumb visual vis-thermal"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">在<strong>真空舱</strong>（气压优于 1×10⁻³ Pa）内通过红外加热笼、电加热片加热，液氮或气氮冷却，同时施加真空与极端温度循环。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">综合考核卫星在真空热环境下的工作性能，验证<strong>热控设计</strong>、检出热失配与释气问题，是鉴定试验核心项。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">02</span>
+        <h3 class="sub-block__title">热循环试验</h3>
+        <span class="sub-block__tag">TC · 快速温度交变</span>
+        <div class="sub-block__thumb visual vis-thermal"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">在大气或低气压下让试件经历快速温度交变（典型温变速率≥5℃/min，区间-40~+70℃），诱发热应力。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">作为<strong>环境应力筛选（ESS）</strong>手段，暴露焊接虚焊、材料匹配缺陷，剔除早期失效。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">03</span>
+        <h3 class="sub-block__title">热平衡试验</h3>
+        <span class="sub-block__tag">TB · 稳态温度场</span>
+        <div class="sub-block__thumb visual vis-thermal"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">在真空热环境下让卫星达到<strong>稳态热平衡</strong>，测量各部位温度分布并与热网络模型计算结果比对。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">验证<strong>热控设计</strong>（隔热、加热器功率、辐射器配置）是否满足在轨温度要求，校正热模型。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">04</span>
+        <h3 class="sub-block__title">热浸试验</h3>
+        <span class="sub-block__tag">高温老炼</span>
+        <div class="sub-block__thumb visual vis-thermal"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">在高温下（典型+70℃~+85℃）对电子设备进行长时间（72~168h）<strong>通电老炼</strong>，加速早期失效机制。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">筛选<strong>器件早期失效</strong>，提升设备可靠性，与热循环互补作为完整环境应力筛选。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== DETAIL: EMC =================== -->
+<div class="page" id="page-emc">
+  <header class="detail-header">
+    <div class="detail-header__inner">
+      <button class="back-btn" onclick="navigate('home')">
+        <span class="back-btn__arrow">←</span> 返回主页
+      </button>
+      <span class="detail-header__meta">试验详情 / DETAIL</span>
+    </div>
+  </header>
+
+  <section class="detail-hero">
+    <div class="detail-hero__visual visual vis-emc"><div class="vis-icon"></div></div>
+    <div class="detail-hero__inner">
+      <div class="detail-hero__kicker">EMC TEST · 电磁兼容试验</div>
+      <h1 class="detail-hero__title">电磁兼容试验</h1>
+      <p class="detail-hero__desc">依据 GJB 151B/C 与 MIL-STD-461 标准，系统验证卫星电子设备互不干扰且能抵抗外部电磁环境，保障在轨电磁安全。</p>
+    </div>
+  </section>
+
+  <div class="sub-list">
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">01</span>
+        <h3 class="sub-block__title">RE 辐射发射</h3>
+        <span class="sub-block__tag">Radiated Emission</span>
+        <div class="sub-block__thumb visual vis-emc"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">在<strong>半电波暗室或屏蔽暗室</strong>中用接收天线与 EMI 接收机扫描测量试件在 10kHz~18GHz 频段的辐射场强。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">确保设备对外辐射不超标，不干扰星上其他设备或地面测控链路，满足 <strong>GJB 151B RE102</strong> 限值。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">02</span>
+        <h3 class="sub-block__title">CE 传导发射</h3>
+        <span class="sub-block__tag">Conducted Emission</span>
+        <div class="sub-block__thumb visual vis-emc"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">通过<strong>线路阻抗稳定网络（LISN）</strong>在电源线上耦合测量试件传导干扰电压/电流频谱。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">控制通过线缆传播的干扰，保护星上电源品质，满足 <strong>GJB 151B CE102</strong> 限值要求。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">03</span>
+        <h3 class="sub-block__title">RS 辐射敏感度</h3>
+        <span class="sub-block__tag">Radiated Susceptibility</span>
+        <div class="sub-block__thumb visual vis-emc"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">用发射天线对试件施加规定场强的电磁场（典型 1V/m~50V/m），在屏蔽暗室中观察设备是否失效。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">验证设备在 external RF 环境下的抗扰度，满足 <strong>GJB 151B RS103</strong> 限值。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">04</span>
+        <h3 class="sub-block__title">CS 传导敏感度</h3>
+        <span class="sub-block__tag">Conducted Susceptibility</span>
+        <div class="sub-block__thumb visual vis-emc"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">在电源/信号线上通过<strong>耦合网络注入干扰</strong>电流/电压（共模/差模），观察设备是否误动作或失效。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">验证设备对线缆耦合干扰的承受能力，满足 <strong>GJB 151B CS101/CS114</strong> 限值要求。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== DETAIL: MAGNETIC =================== -->
+<div class="page" id="page-magnetic">
+  <header class="detail-header">
+    <div class="detail-header__inner">
+      <button class="back-btn" onclick="navigate('home')">
+        <span class="back-btn__arrow">←</span> 返回主页
+      </button>
+      <span class="detail-header__meta">试验详情 / DETAIL</span>
+    </div>
+  </header>
+
+  <section class="detail-hero">
+    <div class="detail-hero__visual visual vis-mag"><div class="vis-icon"></div></div>
+    <div class="detail-hero__inner">
+      <div class="detail-hero__kicker">MAGNETIC TEST · 磁试验</div>
+      <h1 class="detail-hero__title">磁试验</h1>
+      <p class="detail-hero__desc">通过控制卫星整体磁特性，保障姿态控制精度与星上科学载荷（如磁强计）测量有效性，是高精度对地观测及科学探测任务的关键环节。</p>
+    </div>
+  </section>
+
+  <div class="sub-list">
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">01</span>
+        <h3 class="sub-block__title">剩磁矩测量</h3>
+        <span class="sub-block__tag">Residual Magnetic Moment</span>
+        <div class="sub-block__thumb visual vis-mag"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">在<strong>零磁环境</strong>（磁屏蔽室或线圈补偿系统）中用三轴磁通门磁强计扫描卫星周围多点磁场，反演剩磁矩矢量大小与方向。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">评估卫星在轨对<strong>姿态控制系统磁干扰</strong>，是高精度三轴稳定卫星的必测项。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">02</span>
+        <h3 class="sub-block__title">背景磁环境评估</h3>
+        <span class="sub-block__tag">Background Magnetic Field</span>
+        <div class="sub-block__thumb visual vis-mag"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">测量试验场地周围<strong>地磁场及环境干扰</strong>磁场分布，并在试件测试前后进行基线比对。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">为剩磁矩测量提供基准，扣除环境干扰，确保<strong>测量数据精度</strong>与可重复性。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">03</span>
+        <h3 class="sub-block__title">杂散磁场测量</h3>
+        <span class="sub-block__tag">Stray Magnetic Field</span>
+        <div class="sub-block__thumb visual vis-mag"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">在卫星工作状态下用磁强计扫描<strong>星上设备周围</strong>的磁场分布，识别主要磁性部件及干扰源。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">识别磁性部件对星上<strong>科学载荷</strong>（磁强计、粒子探测器）的影响，指导设备布局与磁屏蔽设计。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-block">
+      <div class="sub-block__left">
+        <span class="sub-block__num">04</span>
+        <h3 class="sub-block__title">磁补偿试验</h3>
+        <span class="sub-block__tag">Magnetic Compensation</span>
+        <div class="sub-block__thumb visual vis-mag"><div class="vis-icon"></div></div>
+      </div>
+      <div class="sub-block__right">
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--principle">原理</span>
+          <p class="sub-block__text">通过施加反向磁场（线圈）或在卫星表面粘贴<strong>磁补偿条</strong>抵消剩磁，重复测量使整体磁矩达标。</p>
+        </div>
+        <div class="sub-block__field">
+          <span class="sub-block__label sub-block__label--effect">作用</span>
+          <p class="sub-block__text">使卫星整体磁矩满足任务指标，保障<strong>姿态控制精度</strong>与科学测量有效性。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function navigate(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const map = { home: 'page-home', mechanical: 'page-mechanical', thermal: 'page-thermal', emc: 'page-emc', magnetic: 'page-magnetic' };
+    const target = document.getElementById(map[name]);
+    if (target) target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    history.replaceState(null, '', '#/' + name);
+  }
+
+  // Robust section navigation: ensure home page is active, then scroll to section
+  function goToSection(id) {
+    const homePage = document.getElementById('page-home');
+    if (!homePage.classList.contains('active')) {
+      // Switch to home first
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      homePage.classList.add('active');
+      history.replaceState(null, '', '#/home');
+      // Wait for DOM to render before scrolling
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = document.getElementById(id);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    } else {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // Hash-based routing on load
+  window.addEventListener('DOMContentLoaded', () => {
+    const hash = location.hash.replace('#/', '');
+    if (hash && ['mechanical','thermal','emc','magnetic'].includes(hash)) {
+      navigate(hash);
+    } else {
+      navigate('home');
+    }
+  });
+
+  window.addEventListener('hashchange', () => {
+    const hash = location.hash.replace('#/', '');
+    if (hash && hash !== 'home') {
+      if (['mechanical','thermal','emc','magnetic'].includes(hash)) navigate(hash);
+    } else {
+      navigate('home');
+    }
+  });
+</script>
+</body>
+</html>
